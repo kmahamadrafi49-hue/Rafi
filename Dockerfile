@@ -16,12 +16,12 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 COPY . /var/www/html/
 WORKDIR /var/www/html
 
-# Run composer install in root if exists
-RUN if [ -f "composer.json" ]; then composer install --no-dev --optimize-autoloader; fi
+# Run composer install in root if exists (with --no-scripts)
+RUN if [ -f "composer.json" ]; then composer install --no-dev --optimize-autoloader --no-scripts; fi
 
-# Run composer install inside casino folder if exists
+# Run composer install inside casino folder if exists (with --no-scripts)
 RUN if [ -d "casino" ] && [ -f "casino/composer.json" ]; then \
-    cd casino && composer install --no-dev --optimize-autoloader; \
+    cd casino && composer install --no-dev --optimize-autoloader --no-scripts; \
     fi
 
 # Set Apache DocumentRoot to casino folder if index.php is inside it, otherwise keep var/www/html
