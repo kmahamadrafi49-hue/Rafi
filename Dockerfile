@@ -21,13 +21,12 @@ RUN if [ -d "casino" ] && [ -f "casino/composer.json" ]; then \
         cd casino && composer install --no-dev --optimize-autoloader --no-scripts; \
     fi
 
-# Setup Laravel .env and permissions inside casino folder
-RUN if [ -d "casino" ] && [ -f "casino/.env.example" ] && [ ! -f "casino/.env" ]; then \
-        cp casino/.env.example casino/.env; \
-    fi
-
 # Enable Apache Rewrite module
 RUN a2enmod rewrite
+
+# Change Apache DocumentRoot to point directly to casino/public folder
+RUN sed -i 's!/var/www/html!/var/www/html/casino/public!g' /etc/apache2/sites-available/000-default.conf
+RUN sed -i 's!/var/www/!/var/www/html/casino/public!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 
 # Permissions for Laravel storage and cache
 RUN chown -R www-data:www-data /var/www/html \
