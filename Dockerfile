@@ -24,19 +24,18 @@ RUN if [ -d "casino" ] && [ -f "casino/composer.json" ]; then \
 # Enable Apache Rewrite module
 RUN a2enmod rewrite
 
-# Change Apache DocumentRoot to point directly to casino/public folder
-RUN sed -i 's!/var/www/html!/var/www/html/casino/public!g' /etc/apache2/sites-available/000-default.conf
-RUN sed -i 's!/var/www/!/var/www/html/casino/public!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
-
-# Allow access to casino/public directory to fix 403 Forbidden error
-RUN echo '<Directory /var/www/html/casino/public>\n\
-    Options Indexes FollowSymLinks\n\
-    AllowOverride All\n\
-    Require all granted\n\
-</Directory>' >> /etc/apache2/apache2.conf
-
 # Permissions for Laravel storage and cache
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 775 /var/www/html/casino/storage /var/www/html/casino/bootstrap/cache
 
+# Create a startup script to clear cache and start Apache dynamically using environment variables
+RUN echo '#!/bin/bash' > /start.sh && \
+    echo 'cd /var/www/html/casino' >> /start.sh && \
+    echo 'php artisan config:clear' >> /start.sh && \
+    echo 'php artisan cache:clear' >> /start.sh && \
+    echo 'apache2-foreground' >> /start.sh && \
+    chmod +x /start.sh
+
 EXPOSE 80
+
+CMD ["/start.sh"]
