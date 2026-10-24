@@ -16,16 +16,8 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 COPY . /var/www/html/
 WORKDIR /var/www/html/
 
-# Run composer install in root if exists (with --no-scripts)
+# Run composer install if composer.json exists in root
 RUN if [ -f "composer.json" ]; then composer install --no-dev --optimize-autoloader --no-scripts; fi
-
-# Run composer install inside casino folder if exists (with --no-scripts)
-RUN if [ -d "casino" ] && [ -f "casino/composer.json" ]; then \
-        cd casino && composer install --no-dev --optimize-autoloader --no-scripts; \
-    fi
-
-# Set Apache DocumentRoot to public folder for Laravel
-RUN sed -i 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/000-default.conf
 
 # Enable Apache Rewrite module
 RUN a2enmod rewrite
