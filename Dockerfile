@@ -24,8 +24,8 @@ RUN if [ -d "casino" ] && [ -f "casino/composer.json" ]; then \
     cd casino && composer install --no-dev --optimize-autoloader --no-scripts; \
     fi
 
-# Set Apache DocumentRoot to casino folder if index.php is inside it, otherwise keep var/www/html
-RUN sed -i 's!/var/www/html!/var/www/html/casino!g' /etc/apache2/sites-available/000-default.conf || true
+# Set Apache DocumentRoot to casino/public folder for Laravel
+RUN sed -i 's!/var/www/html!/var/www/html/casino/public!g' /etc/apache2/sites-available/000-default.conf || true
 
 # Enable Apache Rewrite module
 RUN a2enmod rewrite
