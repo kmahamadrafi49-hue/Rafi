@@ -28,6 +28,13 @@ RUN a2enmod rewrite
 RUN sed -i 's!/var/www/html!/var/www/html/casino/public!g' /etc/apache2/sites-available/000-default.conf
 RUN sed -i 's!/var/www/!/var/www/html/casino/public!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 
+# Allow access to casino/public directory to fix 403 Forbidden error
+RUN echo '<Directory /var/www/html/casino/public>\n\
+    Options Indexes FollowSymLinks\n\
+    AllowOverride All\n\
+    Require all granted\n\
+</Directory>' >> /etc/apache2/apache2.conf
+
 # Permissions for Laravel storage and cache
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 775 /var/www/html/casino/storage /var/www/html/casino/bootstrap/cache
