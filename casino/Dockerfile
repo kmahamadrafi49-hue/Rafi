@@ -10,8 +10,19 @@ WORKDIR /var/www/html
 
 COPY . /var/www/html/
 
-# server.php ని index.php గా మారుస్తుంది
-RUN if [ -f server.php ] && [ ! -f index.php ]; then cp server.php index.php; fi
+# పాత index.php ని తొలగించి, రూట్ నుంచే లారావెల్ రన్ అయ్యేలా సరికొత్త index.php ని సృష్టిస్తుంది
+RUN rm -f /var/www/html/index.php \
+    && echo '<?php' > /var/www/html/index.php \
+    && echo 'define(\'LARAVEL_START\', microtime(true));' >> /var/www/html/index.php \
+    && echo 'if (file_exists($maintenance = __DIR__.\'/storage/framework/maintenance.php\')) {' >> /var/www/html/index.php \
+    && echo '    require $maintenance;' >> /var/www/html/index.php \
+    && echo '}' >> /var/www/html/index.php \
+    && echo 'require __DIR__.\'/vendor/autoload.php\';' >> /var/www/html/index.php \
+    && echo '$app = require_once __DIR__.\'/bootstrap/app.php\';' >> /var/www/html/index.php \
+    && echo '$kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);' >> /var/www/html/index.php \
+    && echo '$response = $kernel->handle($request = Illuminate\Http\Request::capture());' >> /var/www/html/index.php \
+    && echo '$response->send();' >> /var/www/html/index.php \
+    && echo '$kernel->terminate($request, $response);' >> /var/www/html/index.php
 
 RUN composer install --no-dev --optimize-autoloader --no-scripts
 
