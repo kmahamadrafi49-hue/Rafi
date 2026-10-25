@@ -52,7 +52,7 @@ RUN echo '<VirtualHost *:80>' > /etc/apache2/sites-available/000-default.conf \
     && echo '    CustomLog ${APACHE_LOG_DIR}/access.log combined' >> /etc/apache2/sites-available/000-default.conf \
     && echo '</VirtualHost>' >> /etc/apache2/sites-available/000-default.conf
 
-# Start script creation
+# Start script creation with automatic database migration
 RUN echo '#!/bin/bash' > /start.sh \
     && echo 'mkdir -p /var/www/html/storage/logs' >> /start.sh \
     && echo 'touch /var/www/html/storage/logs/laravel.log' >> /start.sh \
@@ -61,6 +61,7 @@ RUN echo '#!/bin/bash' > /start.sh \
     && echo 'chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache' >> /start.sh \
     && echo 'php artisan config:clear' >> /start.sh \
     && echo 'php artisan cache:clear' >> /start.sh \
+    && echo 'php artisan migrate --force' >> /start.sh \
     && echo 'apache2-foreground' >> /start.sh
 
 RUN chmod +x /start.sh
