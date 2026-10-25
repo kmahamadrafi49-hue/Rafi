@@ -21,20 +21,24 @@ WORKDIR /var/www/html/casino
 # Run composer install
 RUN composer install --no-dev --optimize-autoloader --no-scripts
 
-# Enable Apache Rewrite module
-RUN a2enmod rewrite
+# Enable Apache Rewrite and Headers module
+RUN a2enmod rewrite headers
 
-# Configure Apache VirtualHost with proxy header support to stop infinite redirects completely
+# Configure Apache VirtualHost with proxy header support to completely stop redirect loops
 RUN echo '<VirtualHost *:80>\n\
     ServerAdmin webmaster@localhost\n\
     DocumentRoot /var/www/html/casino/public\n\
     DirectoryIndex index.php index.html\n\
+    \n\
+    # Force HTTPS and trust Render proxy headers to prevent redirect loops\n\
     SetEnvIf X-Forwarded-Proto "https" HTTPS=on\n\
+    \n\
     <Directory /var/www/html/casino/public>\n\
         Options Indexes FollowSymLinks\n\
         AllowOverride All\n\
         Require all granted\n\
     </Directory>\n\
+    \n\
     ErrorLog ${APACHE_LOG_DIR}/error.log\n\
     CustomLog ${APACHE_LOG_DIR}/access.log combined\n\
 </VirtualHost>' > /etc/apache2/sites-available/000-default.conf
