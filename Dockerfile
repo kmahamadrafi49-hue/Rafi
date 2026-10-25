@@ -24,11 +24,12 @@ RUN composer install --no-dev --optimize-autoloader --no-scripts
 # Enable Apache Rewrite module
 RUN a2enmod rewrite
 
-# Configure Apache VirtualHost properly
+# Configure Apache VirtualHost with proxy header support to stop infinite redirects completely
 RUN echo '<VirtualHost *:80>\n\
     ServerAdmin webmaster@localhost\n\
     DocumentRoot /var/www/html/casino/public\n\
     DirectoryIndex index.php index.html\n\
+    SetEnvIf X-Forwarded-Proto "https" HTTPS=on\n\
     <Directory /var/www/html/casino/public>\n\
         Options Indexes FollowSymLinks\n\
         AllowOverride All\n\
@@ -37,12 +38,6 @@ RUN echo '<VirtualHost *:80>\n\
     ErrorLog ${APACHE_LOG_DIR}/error.log\n\
     CustomLog ${APACHE_LOG_DIR}/access.log combined\n\
 </VirtualHost>' > /etc/apache2/sites-available/000-default.conf
-
-# Force HTTPS and Trust Render Proxies to completely stop redirect loops
-RUN if [ -f "app/Providers/AppServiceProvider.php" ]; then \
-        sed -i "/public function boot(): void/a \        \\Illuminate\\Support\\Facades\\URL::forceScheme('https');\n        \\Illuminate\\Http\\Request::setTrustedProxies(['*'], \\Illuminate\\Http\\Request::HEADER_X_FORWARDED_FOR | \\Illuminate\\Http\\Request::HEADER_X_FORWARDED_HOST | \\Illuminate\\Http\\Request::HEADER_X_FORWARDED_PORT | \\Illuminate\\Http\\Request::HEADER_X_FORWARDED_PROTO);" app/Providers/AppServiceProvider.php || \
-        sed -i "/public function boot()/a \        \\Illuminate\\Support\\Facades\\URL::forceScheme('https');\n        \\Illuminate\\Http\\Request::setTrustedProxies(['*'], \\Illuminate\\Http\\Request::HEADER_X_FORWARDED_FOR | \\Illuminate\\Http\\Request::HEADER_X_FORWARDED_HOST | \\Illuminate\\Http\\Request::HEADER_X_FORWARDED_PORT | \\Illuminate\\Http\\Request::HEADER_X_FORWARDED_PROTO);" app/Providers/AppServiceProvider.php; \
-    fi
 
 # Create a startup script to fix permissions and clear cache dynamically at runtime
 RUN echo '#!/bin/bash' > /start.sh && \
