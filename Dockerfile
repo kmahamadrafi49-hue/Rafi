@@ -24,10 +24,11 @@ RUN composer install --no-dev --optimize-autoloader --no-scripts
 # Enable Apache Rewrite module
 RUN a2enmod rewrite
 
-# Directly write a clean Apache VirtualHost configuration to avoid any path errors
+# Configure Apache VirtualHost properly
 RUN echo '<VirtualHost *:80>\n\
     ServerAdmin webmaster@localhost\n\
     DocumentRoot /var/www/html/casino/public\n\
+    DirectoryIndex index.php index.html\n\
     <Directory /var/www/html/casino/public>\n\
         Options Indexes FollowSymLinks\n\
         AllowOverride All\n\
@@ -36,6 +37,11 @@ RUN echo '<VirtualHost *:80>\n\
     ErrorLog ${APACHE_LOG_DIR}/error.log\n\
     CustomLog ${APACHE_LOG_DIR}/access.log combined\n\
 </VirtualHost>' > /etc/apache2/sites-available/000-default.conf
+
+# Fix Laravel redirect loop by adding RewriteBase to .htaccess
+RUN if [ -f "/var/www/html/casino/public/.htaccess" ]; then \
+        sed -i '/RewriteEngine On/a RewriteBase /' /var/www/html/casino/public/.htaccess; \
+    fi
 
 # Create a startup script to fix permissions and clear cache dynamically at runtime
 RUN echo '#!/bin/bash' > /start.sh && \
