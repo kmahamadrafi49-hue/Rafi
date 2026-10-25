@@ -10,18 +10,23 @@ WORKDIR /var/www/html
 
 COPY . /var/www/html/
 
-RUN mkdir -p /var/www/html/public \
-    && echo '<?php' > /var/www/html/public/index.php \
-    && echo 'define(\'LARAVEL_START\', microtime(true));' >> /var/www/html/public/index.php \
-    && echo 'if (file_exists($maintenance = __DIR__.\'/../storage/framework/maintenance.php\')) {' >> /var/www/html/public/index.php \
-    && echo '    require $maintenance;' >> /var/www/html/public/index.php \
-    && echo '}' >> /var/www/html/public/index.php \
-    && echo 'require __DIR__.\'/../vendor/autoload.php\';' >> /var/www/html/public/index.php \
-    && echo '$app = require_once __DIR__.\'/../bootstrap/app.php\';' >> /var/www/html/public/index.php \
-    && echo '$kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);' >> /var/www/html/public/index.php \
-    && echo '$response = $kernel->handle($request = Illuminate\Http\Request::capture());' >> /var/www/html/public/index.php \
-    && echo '$response->send();' >> /var/www/html/public/index.php \
-    && echo '$kernel->terminate($request, $response);' >> /var/www/html/public/index.php
+RUN mkdir -p /var/www/html/public
+
+RUN cat << 'EOF' > /var/www/html/public/index.php
+<?php
+define('LARAVEL_START', microtime(true));
+if (file_exists($maintenance = __DIR__.'/../storage/framework/maintenance.php')) {
+    require $maintenance;
+}
+require __DIR__.'/../vendor/autoload.php';
+$app = require_once __DIR__.'/../bootstrap/app.php';
+$kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
+$response = $kernel->handle(
+    $request = Illuminate\Http\Request::capture()
+);
+$response->send();
+$kernel->terminate($request, $response);
+EOF
 
 RUN composer install --no-dev --optimize-autoloader --no-scripts
 
