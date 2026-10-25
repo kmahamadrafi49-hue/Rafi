@@ -9,10 +9,8 @@ use VanguardLTE\Repositories\Country\CountryRepository;
 use VanguardLTE\Repositories\Country\EloquentCountry;
 use VanguardLTE\Repositories\Permission\EloquentPermission;
 use VanguardLTE\Repositories\Permission\PermissionRepository;
-use VanguardLTE\Repositories\Role\EloquentRole;
-use VanguardLTE\Repositories\Role\RoleRepository;
 use VanguardLTE\Repositories\Session\DbSession;
-use VanguardLTE\Repositories\Session\SessionRepository;
+use VanguardLTE\Repositories\Session\EloquentSession;
 use VanguardLTE\Repositories\User\EloquentUser;
 use VanguardLTE\Repositories\User\UserRepository;
 use Illuminate\Support\ServiceProvider;
@@ -21,6 +19,9 @@ use Illuminate\Support\Collection;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Pagination\LengthAwarePaginator;
 
+// Added to fix redirect loop
+use Illuminate\Support\Facades\URL;
+use Illuminate\Http\Request;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -35,11 +36,23 @@ class AppServiceProvider extends ServiceProvider
         config(['app.name' => settings('app_name')]);
         \Illuminate\Database\Schema\Builder::defaultStringLength(191);
 
-   /*      if($this->app->environment('production')) {
+        // Added to fix 10 internal redirects loop on Render HTTPS proxy
+        URL::forceScheme('https');
+        Request::setTrustedProxies(
+            ['*'],
+            Request::HEADER_X_FORWARDED_FOR | 
+            Request::HEADER_X_FORWARDED_HOST | 
+            Request::HEADER_X_FORWARDED_PORT | 
+            Request::HEADER_X_FORWARDED_PROTO
+        );
+
+        /*
+        if($this->app->environment('production')) {
             \URL::forceScheme('http');
         }
+        */
 
-   */      Paginator::useBootstrap();;
+        Paginator::useBootstrap();
 
         // Enable pagination
         /*
@@ -48,8 +61,9 @@ class AppServiceProvider extends ServiceProvider
                 function ($perPage = 15, $page = null, $options = []) {
                     $page = $page ?: (Paginator::resolveCurrentPage() ?: 1);
                     return (new LengthAwarePaginator(
-                        $this->forPage($page, $perPage)->values()->all(), $this->count(), $perPage, $page, $options))
-                        ->withPath('');
+                        $this->forPage($page, $perPage)->values()->all(),
+                        $this->count(), $perPage, $page, $options
+                    ))->withPath('');
                 });
         }
         */
@@ -64,7 +78,6 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->singleton(UserRepository::class, EloquentUser::class);
         $this->app->singleton(ActivityRepository::class, EloquentActivity::class);
-        $this->app->singleton(RoleRepository::class, EloquentRole::class);
         $this->app->singleton(PermissionRepository::class, EloquentPermission::class);
         $this->app->singleton(SessionRepository::class, DbSession::class);
         $this->app->singleton(CountryRepository::class, EloquentCountry::class);
