@@ -28,7 +28,17 @@ $response->send();
 $kernel->terminate($request, $response);
 EOF
 
-RUN php -r "$file = '/var/www/html/config/database.php'; if(file_exists($file)){ $content = file_get_contents($file); if(strpos($content, \"'mysql1'\") === false) { $content = str_replace(\"'mysql' => [\", \"'mysql1' => [\n    'driver' => 'mysql',\n    'url' => env('DB_URL'),\n    'host' => env('DB_HOST', '127.0.0.1'),\n    'port' => env('DB_PORT', '3306'),\n    'database' => env('DB_DATABASE', 'laravel'),\n    'username' => env('DB_USERNAME', 'root'),\n    'password' => env('DB_PASSWORD', ''),\n    'unix_socket' => env('DB_SOCKET', ''),\n    'charset' => env('DB_CHARSET', 'utf8mb4'),\n    'collation' => env('DB_COLLATION', 'utf8mb4_unicode_ci'),\n    'prefix' => '',\n    'prefix_indexes' => true,\n    'strict' => true,\n    'engine' => null,\n    'options' => extension_loaded('pdo_mysql') ? array_filter([\n        PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),\n    ]) : [],\n],\n'mysql' => [\", $content); file_put_contents($file, $content); }"
+RUN php << 'PHP'
+<?php
+$file = '/var/www/html/config/database.php';
+if(file_exists($file)){
+    $content = file_get_contents($file);
+    if(strpos($content, "'mysql1'") === false) {
+        $content = str_replace("'mysql' => [", "'mysql1' => [\n    'driver' => 'mysql',\n    'url' => env('DB_URL'),\n    'host' => env('DB_HOST', '127.0.0.1'),\n    'port' => env('DB_PORT', '3306'),\n    'database' => env('DB_DATABASE', 'laravel'),\n    'username' => env('DB_USERNAME', 'root'),\n    'password' => env('DB_PASSWORD', ''),\n    'unix_socket' => env('DB_SOCKET', ''),\n    'charset' => env('DB_CHARSET', 'utf8mb4'),\n    'collation' => env('DB_COLLATION', 'utf8mb4_unicode_ci'),\n    'prefix' => '',\n    'prefix_indexes' => true,\n    'strict' => true,\n    'engine' => null,\n    'options' => [],\n],\n'mysql' => [", $content);
+        file_put_contents($file, $content);
+    }
+}
+PHP
 
 RUN composer install --no-dev --optimize-autoloader --no-scripts
 
