@@ -38,9 +38,10 @@ RUN echo '<VirtualHost *:80>\n\
     CustomLog ${APACHE_LOG_DIR}/access.log combined\n\
 </VirtualHost>' > /etc/apache2/sites-available/000-default.conf
 
-# Fix Laravel redirect loop by adding RewriteBase to .htaccess
-RUN if [ -f "/var/www/html/casino/public/.htaccess" ]; then \
-        sed -i '/RewriteEngine On/a RewriteBase /' /var/www/html/casino/public/.htaccess; \
+# Force HTTPS scheme in AppServiceProvider to prevent redirect loops behind Render proxy
+RUN if [ -f "app/Providers/AppServiceProvider.php" ]; then \
+        sed -i "/public function boot(): void/a \        \\Illuminate\\Support\\Facades\\URL::forceScheme('https');" app/Providers/AppServiceProvider.php || \
+        sed -i "/public function boot()/a \        \\Illuminate\\Support\\Facades\\URL::forceScheme('https');" app/Providers/AppServiceProvider.php; \
     fi
 
 # Create a startup script to fix permissions and clear cache dynamically at runtime
