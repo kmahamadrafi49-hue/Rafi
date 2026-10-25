@@ -10,6 +10,7 @@ WORKDIR /var/www/html
 
 COPY . /var/www/html/
 
+# Create root index.php
 RUN cat << 'EOF' > /var/www/html/index.php
 <?php
 
@@ -32,6 +33,17 @@ $response = $kernel->handle(
 $response->send();
 
 $kernel->terminate($request, $response);
+EOF
+
+# Overwrite server.php to point directly to index.php
+RUN cat << 'EOF' > /var/www/html/server.php
+<?php
+
+$uri = urldecode(
+    parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)
+);
+
+require_once __DIR__.'/index.php';
 EOF
 
 RUN composer install --no-dev --optimize-autoloader --no-scripts
