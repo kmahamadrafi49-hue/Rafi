@@ -8,7 +8,8 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
-COPY . /var/www/html/
+# ఇక్కడ casino ఫోల్డర్ లోపల ఉన్నది నేరుగా /var/www/html/ లోకి కాపీ అవుతుంది
+COPY casino/ /var/www/html/
 
 RUN cat << 'EOF' > /var/www/html/index.php
 <?php
