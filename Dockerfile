@@ -38,10 +38,10 @@ RUN echo '<VirtualHost *:80>\n\
     CustomLog ${APACHE_LOG_DIR}/access.log combined\n\
 </VirtualHost>' > /etc/apache2/sites-available/000-default.conf
 
-# Force HTTPS scheme in AppServiceProvider to prevent redirect loops behind Render proxy
+# Force HTTPS and Trust Render Proxies to completely stop redirect loops
 RUN if [ -f "app/Providers/AppServiceProvider.php" ]; then \
-        sed -i "/public function boot(): void/a \        \\Illuminate\\Support\\Facades\\URL::forceScheme('https');" app/Providers/AppServiceProvider.php || \
-        sed -i "/public function boot()/a \        \\Illuminate\\Support\\Facades\\URL::forceScheme('https');" app/Providers/AppServiceProvider.php; \
+        sed -i "/public function boot(): void/a \        \\Illuminate\\Support\\Facades\\URL::forceScheme('https');\n        \\Illuminate\\Http\\Request::setTrustedProxies(['*'], \\Illuminate\\Http\\Request::HEADER_X_FORWARDED_FOR | \\Illuminate\\Http\\Request::HEADER_X_FORWARDED_HOST | \\Illuminate\\Http\\Request::HEADER_X_FORWARDED_PORT | \\Illuminate\\Http\\Request::HEADER_X_FORWARDED_PROTO);" app/Providers/AppServiceProvider.php || \
+        sed -i "/public function boot()/a \        \\Illuminate\\Support\\Facades\\URL::forceScheme('https');\n        \\Illuminate\\Http\\Request::setTrustedProxies(['*'], \\Illuminate\\Http\\Request::HEADER_X_FORWARDED_FOR | \\Illuminate\\Http\\Request::HEADER_X_FORWARDED_HOST | \\Illuminate\\Http\\Request::HEADER_X_FORWARDED_PORT | \\Illuminate\\Http\\Request::HEADER_X_FORWARDED_PROTO);" app/Providers/AppServiceProvider.php; \
     fi
 
 # Create a startup script to fix permissions and clear cache dynamically at runtime
