@@ -10,6 +10,19 @@ WORKDIR /var/www/html
 
 COPY . /var/www/html/
 
+RUN mkdir -p /var/www/html/public \
+    && echo '<?php' > /var/www/html/public/index.php \
+    && echo 'define(\'LARAVEL_START\', microtime(true));' >> /var/www/html/public/index.php \
+    && echo 'if (file_exists($maintenance = __DIR__.\'/../storage/framework/maintenance.php\')) {' >> /var/www/html/public/index.php \
+    && echo '    require $maintenance;' >> /var/www/html/public/index.php \
+    && echo '}' >> /var/www/html/public/index.php \
+    && echo 'require __DIR__.\'/../vendor/autoload.php\';' >> /var/www/html/public/index.php \
+    && echo '$app = require_once __DIR__.\'/../bootstrap/app.php\';' >> /var/www/html/public/index.php \
+    && echo '$kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);' >> /var/www/html/public/index.php \
+    && echo '$response = $kernel->handle($request = Illuminate\Http\Request::capture());' >> /var/www/html/public/index.php \
+    && echo '$response->send();' >> /var/www/html/public/index.php \
+    && echo '$kernel->terminate($request, $response);' >> /var/www/html/public/index.php
+
 RUN composer install --no-dev --optimize-autoloader --no-scripts
 
 RUN a2enmod rewrite headers
@@ -17,7 +30,8 @@ RUN a2enmod rewrite headers
 RUN echo '<VirtualHost *:80>' > /etc/apache2/sites-available/000-default.conf \
     && echo '    ServerAdmin webmaster@localhost' >> /etc/apache2/sites-available/000-default.conf \
     && echo '    DocumentRoot /var/www/html/public' >> /etc/apache2/sites-available/000-default.conf \
-    && echo '    <Directory /var/www/html>' >> /etc/apache2/sites-available/000-default.conf \
+    && echo '    DirectoryIndex index.php' >> /etc/apache2/sites-available/000-default.conf \
+    && echo '    <Directory /var/www/html/public>' >> /etc/apache2/sites-available/000-default.conf \
     && echo '        Options Indexes FollowSymLinks' >> /etc/apache2/sites-available/000-default.conf \
     && echo '        AllowOverride All' >> /etc/apache2/sites-available/000-default.conf \
     && echo '        Require all granted' >> /etc/apache2/sites-available/000-default.conf \
