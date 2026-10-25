@@ -10,20 +10,47 @@ WORKDIR /var/www/html
 
 COPY . /var/www/html/
 
+# Create index.php directly in root directory to handle Laravel routing
+RUN cat << 'EOF' > /var/www/html/index.php
+<?php
+
+define('LARAVEL_START', microtime(true));
+
+if (file_exists($maintenance = __DIR__.'/storage/framework/maintenance.php')) {
+    require $maintenance;
+}
+
+require __DIR__.'/vendor/autoload.php';
+
+$app = require_once __DIR__.'/bootstrap/app.php';
+
+$kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
+
+$response = $kernel->handle(
+    $request = Illuminate\Http\Request::capture()
+);
+
+$response->send();
+
+$kernel->terminate($request, $response);
+EOF
+
 RUN composer install --no-dev --optimize-autoloader --no-scripts
 
+# Setup storage and permissions
 RUN mkdir -p /var/www/html/storage /var/www/html/bootstrap/cache \
     && chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
     && chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache
 
 RUN a2enmod rewrite headers
 
+# Configure Apache VirtualHost
 RUN echo '<VirtualHost *:80>' > /etc/apache2/sites-available/000-default.conf \
     && echo '     ServerAdmin webmaster@localhost' >> /etc/apache2/sites-available/000-default.conf \
-    && echo '     DocumentRoot /var/www/html/public' >> /etc/apache2/sites-available/000-default.conf \
+    && echo '     DocumentRoot /var/www/html' >> /etc/apache2/sites-available/000-default.conf \
     && echo '     DirectoryIndex index.php index.html' >> /etc/apache2/sites-available/000-default.conf \
     && echo '     SetEnvIf X-Forwarded-Proto "https" HTTPS-on' >> /etc/apache2/sites-available/000-default.conf \
-    && echo '     <Directory /var/www/html/public>' >> /etc/apache2/sites-available/000-default.conf \
+    && echo '     <Directory /var/www/html>' >> /etc/apache2/sites-available/000-default.conf \
     && echo '         Options Indexes FollowSymLinks' >> /etc/apache2/sites-available/000-default.conf \
     && echo '         AllowOverride All' >> /etc/apache2/sites-available/000-default.conf \
     && echo '         Require all granted' >> /etc/apache2/sites-available/000-default.conf \
@@ -32,6 +59,7 @@ RUN echo '<VirtualHost *:80>' > /etc/apache2/sites-available/000-default.conf \
     && echo '     CustomLog ${APACHE_LOG_DIR}/access.log combined' >> /etc/apache2/sites-available/000-default.conf \
     && echo '</VirtualHost>' >> /etc/apache2/sites-available/000-default.conf
 
+# Setup start script for permissions, cache clearing and migrations
 RUN echo '#!/bin/bash' > /start.sh \
     && echo 'chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache' >> /start.sh \
     && echo 'chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache' >> /start.sh \
