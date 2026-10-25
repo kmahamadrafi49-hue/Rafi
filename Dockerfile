@@ -16,26 +16,15 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 COPY . /var/www/html/
 WORKDIR /var/www/html/
 
-# Run composer install inside casino folder
+# Run composer install inside casino folder where composer.json is located
 RUN if [ -d "casino" ] && [ -f "casino/composer.json" ]; then \
         cd casino && composer install --no-dev --optimize-autoloader --no-scripts; \
-    fi
-
-# Setup Laravel .env if not exists
-RUN if [ -d "casino" ] && [ -f "casino/.env.example" ] && [ ! -f "casino/.env" ]; then \
-        cp casino/.env.example casino/.env; \
-    fi
-
-# Clear config and application cache so new .env values take effect
-RUN if [ -d "casino" ]; then \
-        cd casino && php artisan config:clear && php artisan cache:clear; \
     fi
 
 # Enable Apache Rewrite module
 RUN a2enmod rewrite
 
-# Permissions for Laravel storage and cache
-RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 775 /var/www/html/casino/storage /var/www/html/casino/bootstrap/cache
+# Permissions
+RUN chown -R www-data:www-data /var/www/html
 
 EXPOSE 80
