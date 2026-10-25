@@ -15,25 +15,27 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Copy project files
 COPY . /var/www/html/
 
-# Set working directory directly to casino folder where composer.json is located
+# Set working directory to casino
 WORKDIR /var/www/html/casino
 
-# Run composer install inside casino folder
+# Run composer install
 RUN composer install --no-dev --optimize-autoloader --no-scripts
 
 # Enable Apache Rewrite module
 RUN a2enmod rewrite
 
-# Change Apache DocumentRoot to point directly to casino/public folder
-RUN sed -i 's!/var/www/html!/var/www/html/casino/public!g' /etc/apache2/sites-available/000-default.conf
-RUN sed -i 's!/var/www/!/var/www/html/casino/public!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
-
-# Allow access to casino/public directory to fix 403 error
-RUN echo '<Directory /var/www/html/casino/public>\n\
-    Options Indexes FollowSymLinks\n\
-    AllowOverride All\n\
-    Require all granted\n\
-</Directory>' >> /etc/apache2/apache2.conf
+# Directly write a clean Apache VirtualHost configuration to avoid any path errors
+RUN echo '<VirtualHost *:80>\n\
+    ServerAdmin webmaster@localhost\n\
+    DocumentRoot /var/www/html/casino/public\n\
+    <Directory /var/www/html/casino/public>\n\
+        Options Indexes FollowSymLinks\n\
+        AllowOverride All\n\
+        Require all granted\n\
+    </Directory>\n\
+    ErrorLog ${APACHE_LOG_DIR}/error.log\n\
+    CustomLog ${APACHE_LOG_DIR}/access.log combined\n\
+</VirtualHost>' > /etc/apache2/sites-available/000-default.conf
 
 # Create a startup script to fix permissions and clear cache dynamically at runtime
 RUN echo '#!/bin/bash' > /start.sh && \
