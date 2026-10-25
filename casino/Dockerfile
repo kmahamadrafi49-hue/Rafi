@@ -8,48 +8,25 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
-# ఇక్కడ casino బదులుగా నేరుగా dot (.) పెట్టాలి
 COPY . /var/www/html/
 
-RUN cat << 'EOF' > /var/www/html/index.php
-<?php
-
-define('LARAVEL_START', microtime(true));
-
-if (file_exists($maintenance = __DIR__.'/storage/framework/maintenance.php')) {
-    require $maintenance;
-}
-
-require __DIR__.'/vendor/autoload.php';
-
-$app = require_once __DIR__.'/bootstrap/app.php';
-
-$kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
-
-$response = $kernel->handle(
-    $request = Illuminate\Http\Request::capture()
-);
-
-$response->send();
-
-$kernel->terminate($request, $response);
-EOF
-
-RUN composer install --no-dev --optimize-autoloader --no-scripts
+# కాంపోజర్ డిపెండెన్సీస్ క్యాసినో ఫోల్డర్ లోపల ఇన్‌స్టాల్ అవ్వాలి
+RUN cd casino && composer install --no-dev --optimize-autoloader --no-scripts
 
 # స్టోరేజ్ మరియు పర్మిషన్స్ సెట్ చేయడం
-RUN mkdir -p /var/www/html/storage /var/www/html/bootstrap/cache \
-    && chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
-    && chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache
+RUN mkdir -p /var/www/html/casino/storage /var/www/html/casino/bootstrap/cache \
+    && chown -R www-data:www-data /var/www/html/casino/storage /var/www/html/casino/bootstrap/cache \
+    && chmod -R 777 /var/www/html/casino/storage /var/www/html/casino/bootstrap/cache
 
 RUN a2enmod rewrite headers
 
+# అపాచీ డాక్యుమెంట్ రూట్ నేరుగా casino/public కి పాయింట్ చేయాలి
 RUN echo '<VirtualHost *:80>' > /etc/apache2/sites-available/000-default.conf \
     && echo '     ServerAdmin webmaster@localhost' >> /etc/apache2/sites-available/000-default.conf \
-    && echo '     DocumentRoot /var/www/html/public' >> /etc/apache2/sites-available/000-default.conf \
+    && echo '     DocumentRoot /var/www/html/casino/public' >> /etc/apache2/sites-available/000-default.conf \
     && echo '     DirectoryIndex index.php index.html' >> /etc/apache2/sites-available/000-default.conf \
     && echo '     SetEnvIf X-Forwarded-Proto "https" HTTPS-on' >> /etc/apache2/sites-available/000-default.conf \
-    && echo '     <Directory /var/www/html/public>' >> /etc/apache2/sites-available/000-default.conf \
+    && echo '     <Directory /var/www/html/casino/public>' >> /etc/apache2/sites-available/000-default.conf \
     && echo '         Options Indexes FollowSymLinks' >> /etc/apache2/sites-available/000-default.conf \
     && echo '         AllowOverride All' >> /etc/apache2/sites-available/000-default.conf \
     && echo '         Require all granted' >> /etc/apache2/sites-available/000-default.conf \
@@ -58,9 +35,11 @@ RUN echo '<VirtualHost *:80>' > /etc/apache2/sites-available/000-default.conf \
     && echo '     CustomLog ${APACHE_LOG_DIR}/access.log combined' >> /etc/apache2/sites-available/000-default.conf \
     && echo '</VirtualHost>' >> /etc/apache2/sites-available/000-default.conf
 
+# స్టార్టప్ స్క్రిప్ట్ (క్యాసినో ఫోల్డర్లోకి వెళ్లి మైగ్రేషన్ మరియు క్యాచే క్లియర్ చేస్తుంది)
 RUN echo '#!/bin/bash' > /start.sh \
-    && echo 'chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache' >> /start.sh \
-    && echo 'chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache' >> /start.sh \
+    && echo 'cd /var/www/html/casino' >> /start.sh \
+    && echo 'chown -R www-data:www-data storage bootstrap/cache' >> /start.sh \
+    && echo 'chmod -R 777 storage bootstrap/cache' >> /start.sh \
     && echo 'php artisan config:clear' >> /start.sh \
     && echo 'php artisan cache:clear' >> /start.sh \
     && echo 'php artisan migrate --force' >> /start.sh \
