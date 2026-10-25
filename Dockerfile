@@ -12,22 +12,24 @@ RUN apt-get update && apt-get install -y \
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Copy project files directly to html root
+# Copy project files
 COPY . /var/www/html/
-WORKDIR /var/www/html/
 
-# Run composer install
+# Set working directory directly to casino folder where composer.json is located
+WORKDIR /var/www/html/casino
+
+# Run composer install inside casino folder
 RUN composer install --no-dev --optimize-autoloader --no-scripts
 
 # Enable Apache Rewrite module
 RUN a2enmod rewrite
 
-# Change Apache DocumentRoot to point directly to public folder
-RUN sed -i 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/000-default.conf
-RUN sed -i 's!/var/www/!/var/www/html/public!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
+# Change Apache DocumentRoot to point directly to casino/public folder
+RUN sed -i 's!/var/www/html!/var/www/html/casino/public!g' /etc/apache2/sites-available/000-default.conf
+RUN sed -i 's!/var/www/!/var/www/html/casino/public!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 
-# Allow access to public directory to fix 403 error
-RUN echo '<Directory /var/www/html/public>\n\
+# Allow access to casino/public directory to fix 403 error
+RUN echo '<Directory /var/www/html/casino/public>\n\
     Options Indexes FollowSymLinks\n\
     AllowOverride All\n\
     Require all granted\n\
@@ -35,8 +37,9 @@ RUN echo '<Directory /var/www/html/public>\n\
 
 # Create a startup script to fix permissions and clear cache dynamically at runtime
 RUN echo '#!/bin/bash' > /start.sh && \
-    echo 'chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache' >> /start.sh && \
-    echo 'chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache' >> /start.sh && \
+    echo 'chown -R www-data:www-data /var/www/html/casino/storage /var/www/html/casino/bootstrap/cache' >> /start.sh && \
+    echo 'chmod -R 775 /var/www/html/casino/storage /var/www/html/casino/bootstrap/cache' >> /start.sh && \
+    echo 'cd /var/www/html/casino' >> /start.sh && \
     echo 'php artisan config:clear' >> /start.sh && \
     echo 'php artisan cache:clear' >> /start.sh && \
     echo 'apache2-foreground' >> /start.sh && \
