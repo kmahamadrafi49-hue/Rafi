@@ -10,6 +10,9 @@ WORKDIR /var/www/html
 
 COPY . /var/www/html/
 
+# server.php ని index.php గా మారుస్తుంది
+RUN if [ -f server.php ] && [ ! -f index.php ]; then cp server.php index.php; fi
+
 RUN composer install --no-dev --optimize-autoloader --no-scripts
 
 RUN a2enmod rewrite headers
