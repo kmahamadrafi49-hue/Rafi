@@ -16,10 +16,10 @@ RUN a2enmod rewrite headers
 
 RUN echo '<VirtualHost *:80>' > /etc/apache2/sites-available/000-default.conf \
     && echo '    ServerAdmin webmaster@localhost' >> /etc/apache2/sites-available/000-default.conf \
-    && echo '    DocumentRoot /var/www/html/public' >> /etc/apache2/sites-available/000-default.conf \
+    && echo '    DocumentRoot /var/www/html' >> /etc/apache2/sites-available/000-default.conf \
     && echo '    DirectoryIndex index.php index.html' >> /etc/apache2/sites-available/000-default.conf \
     && echo '    SetEnvIf X-Forwarded-Proto "https" HTTPS-on' >> /etc/apache2/sites-available/000-default.conf \
-    && echo '    <Directory /var/www/html/public>' >> /etc/apache2/sites-available/000-default.conf \
+    && echo '    <Directory /var/www/html>' >> /etc/apache2/sites-available/000-default.conf \
     && echo '        Options Indexes FollowSymLinks' >> /etc/apache2/sites-available/000-default.conf \
     && echo '        AllowOverride All' >> /etc/apache2/sites-available/000-default.conf \
     && echo '        Require all granted' >> /etc/apache2/sites-available/000-default.conf \
@@ -29,8 +29,6 @@ RUN echo '<VirtualHost *:80>' > /etc/apache2/sites-available/000-default.conf \
     && echo '</VirtualHost>' >> /etc/apache2/sites-available/000-default.conf
 
 RUN echo '#!/bin/bash' > /start.sh \
-    && echo 'chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache' >> /start.sh \
-    && echo 'chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache' >> /start.sh \
     && echo 'php artisan config:clear' >> /start.sh \
     && echo 'php artisan cache:clear' >> /start.sh \
     && echo 'apache2-foreground' >> /start.sh \
