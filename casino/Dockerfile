@@ -12,7 +12,6 @@ COPY . /var/www/html/
 
 RUN composer install --no-dev --optimize-autoloader --no-scripts
 
-# స్టోరేజ్ మరియు పర్మిషన్స్ సెట్ చేయడం
 RUN mkdir -p /var/www/html/storage /var/www/html/bootstrap/cache \
     && chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
     && chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache
@@ -21,10 +20,10 @@ RUN a2enmod rewrite headers
 
 RUN echo '<VirtualHost *:80>' > /etc/apache2/sites-available/000-default.conf \
     && echo '     ServerAdmin webmaster@localhost' >> /etc/apache2/sites-available/000-default.conf \
-    && echo '     DocumentRoot /var/www/html/public' >> /etc/apache2/sites-available/000-default.conf \
+    && echo '     DocumentRoot /var/www/html' >> /etc/apache2/sites-available/000-default.conf \
     && echo '     DirectoryIndex index.php index.html' >> /etc/apache2/sites-available/000-default.conf \
     && echo '     SetEnvIf X-Forwarded-Proto "https" HTTPS-on' >> /etc/apache2/sites-available/000-default.conf \
-    && echo '     <Directory /var/www/html/public>' >> /etc/apache2/sites-available/000-default.conf \
+    && echo '     <Directory /var/www/html>' >> /etc/apache2/sites-available/000-default.conf \
     && echo '         Options Indexes FollowSymLinks' >> /etc/apache2/sites-available/000-default.conf \
     && echo '         AllowOverride All' >> /etc/apache2/sites-available/000-default.conf \
     && echo '         Require all granted' >> /etc/apache2/sites-available/000-default.conf \
