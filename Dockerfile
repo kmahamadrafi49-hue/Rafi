@@ -6,9 +6,10 @@ RUN docker-php-ext-install pdo pdo_mysql mysqli zip gd
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-WORKDIR /var/www/html
+# casino ఫోల్డర్ లోని ఫైల్స్ అన్నీ నేరుగా /var/www/html లోకి కాపీ అవుతాయి
+COPY casino/ /var/www/html/
 
-COPY . /var/www/html/
+WORKDIR /var/www/html
 
 RUN composer install --no-dev --optimize-autoloader --no-scripts
 
