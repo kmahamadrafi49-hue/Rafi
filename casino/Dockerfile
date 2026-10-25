@@ -10,6 +10,9 @@ WORKDIR /var/www/html
 
 COPY . /var/www/html/
 
+# Aiven MySQL SSL ఆప్షన్‌ను config/database.php లోకి ఆటోమేటిక్‌గా జోడించడానికి
+RUN php -r '$file = "config/database.php"; if(file_exists($file)) { $content = file_get_contents($file); $replacement = " \\x27options\\x27 => [PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false],\\n        \\x27mysql\\x27 =>"; $content = str_replace("\x27mysql\x27 =>", $replacement, $content); file_put_contents($file, $content); }'
+
 RUN cat << 'EOF' > /var/www/html/index.php
 <?php
 define('LARAVEL_START', microtime(true));
@@ -54,7 +57,8 @@ RUN echo '<VirtualHost *:80>' > /etc/apache2/sites-available/000-default.conf \
 
 # Start script creation
 RUN echo '#!/bin/bash' > /start.sh \
-    && echo 'rm -rf /var/www/html/storage/logs/*' >> /start.sh \
+    && echo 'mkdir -p /var/www/html/storage/logs' >> /start.sh \
+    && echo 'touch /var/www/html/storage/logs/laravel.log' >> /start.sh \
     && echo 'mkdir -p /var/www/html/storage/framework/sessions /var/www/html/storage/framework/views /var/www/html/storage/framework/cache' >> /start.sh \
     && echo 'chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache' >> /start.sh \
     && echo 'chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache' >> /start.sh \
