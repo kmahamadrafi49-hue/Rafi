@@ -14,45 +14,28 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Copy project files
 COPY . /var/www/html/
+WORKDIR /var/www/html/
 
-# Set working directory to casino
-WORKDIR /var/www/html/casino
+# Run composer install inside casino folder
+RUN if [ -d "casino" ] && [ -f "casino/composer.json" ]; then \
+        cd casino && composer install --no-dev --optimize-autoloader --no-scripts; \
+    fi
 
-# Run composer install
-RUN composer install --no-dev --optimize-autoloader --no-scripts
+# Setup Laravel .env if not exists
+RUN if [ -d "casino" ] && [ -f "casino/.env.example" ] && [ ! -f "casino/.env" ]; then \
+        cp casino/.env.example casino/.env; \
+    fi
 
-# Enable Apache Rewrite and Headers module
-RUN a2enmod rewrite headers
+# Clear config and application cache so new .env values take effect
+RUN if [ -d "casino" ]; then \
+        cd casino && php artisan config:clear && php artisan cache:clear; \
+    fi
 
-# Configure Apache VirtualHost with proxy header support to completely stop redirect loops
-RUN echo '<VirtualHost *:80>\n\
-    ServerAdmin webmaster@localhost\n\
-    DocumentRoot /var/www/html/casino/public\n\
-    DirectoryIndex index.php index.html\n\
-    \n\
-    # Force HTTPS and trust Render proxy headers to prevent redirect loops\n\
-    SetEnvIf X-Forwarded-Proto "https" HTTPS=on\n\
-    \n\
-    <Directory /var/www/html/casino/public>\n\
-        Options Indexes FollowSymLinks\n\
-        AllowOverride All\n\
-        Require all granted\n\
-    </Directory>\n\
-    \n\
-    ErrorLog ${APACHE_LOG_DIR}/error.log\n\
-    CustomLog ${APACHE_LOG_DIR}/access.log combined\n\
-</VirtualHost>' > /etc/apache2/sites-available/000-default.conf
+# Enable Apache Rewrite module
+RUN a2enmod rewrite
 
-# Create a startup script to fix permissions and clear cache dynamically at runtime
-RUN echo '#!/bin/bash' > /start.sh && \
-    echo 'chown -R www-data:www-data /var/www/html/casino/storage /var/www/html/casino/bootstrap/cache' >> /start.sh && \
-    echo 'chmod -R 775 /var/www/html/casino/storage /var/www/html/casino/bootstrap/cache' >> /start.sh && \
-    echo 'cd /var/www/html/casino' >> /start.sh && \
-    echo 'php artisan config:clear' >> /start.sh && \
-    echo 'php artisan cache:clear' >> /start.sh && \
-    echo 'apache2-foreground' >> /start.sh && \
-    chmod +x /start.sh
+# Permissions for Laravel storage and cache
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 775 /var/www/html/casino/storage /var/www/html/casino/bootstrap/cache
 
 EXPOSE 80
-
-CMD ["/start.sh"]
