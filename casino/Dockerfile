@@ -10,9 +10,6 @@ WORKDIR /var/www/html
 
 COPY . /var/www/html/
 
-# Aiven MySQL SSL ఆప్షన్‌ను config/database.php లోకి ఆటోమేటిక్‌గా జోడించడానికి
-RUN php -r '$file = "config/database.php"; if(file_exists($file)) { $content = file_get_contents($file); $replacement = " \\x27options\\x27 => [PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false],\\n        \\x27mysql\\x27 =>"; $content = str_replace("\x27mysql\x27 =>", $replacement, $content); file_put_contents($file, $content); }'
-
 RUN cat << 'EOF' > /var/www/html/index.php
 <?php
 define('LARAVEL_START', microtime(true));
