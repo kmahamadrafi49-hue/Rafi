@@ -10,7 +10,6 @@ WORKDIR /var/www/html
 
 COPY . /var/www/html/
 
-# heredoc వాడి index.php ని ఎటువంటి ఎర్రర్లు లేకుండా పర్ఫెక్ట్‌గా క్రియేట్ చేస్తుంది
 RUN cat << 'EOF' > /var/www/html/index.php
 <?php
 
@@ -37,6 +36,11 @@ EOF
 
 RUN composer install --no-dev --optimize-autoloader --no-scripts
 
+# స్టోరేజ్ మరియు క్యాష్ ఫోల్డర్లకు పర్మిషన్స్ సెట్ చేస్తుంది
+RUN mkdir -p /var/www/html/storage /var/www/html/bootstrap/cache \
+    && chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
+    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+
 RUN a2enmod rewrite headers
 
 RUN echo '<VirtualHost *:80>' > /etc/apache2/sites-available/000-default.conf \
@@ -54,6 +58,8 @@ RUN echo '<VirtualHost *:80>' > /etc/apache2/sites-available/000-default.conf \
     && echo '</VirtualHost>' >> /etc/apache2/sites-available/000-default.conf
 
 RUN echo '#!/bin/bash' > /start.sh \
+    && echo 'chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache' >> /start.sh \
+    && echo 'chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache' >> /start.sh \
     && echo 'php artisan config:clear' >> /start.sh \
     && echo 'php artisan cache:clear' >> /start.sh \
     && echo 'apache2-foreground' >> /start.sh \
