@@ -10,19 +10,19 @@ WORKDIR /var/www/html
 
 COPY . /var/www/html/
 
-RUN cd casino && composer install --no-dev --optimize-autoloader --no-scripts
+RUN composer install --no-dev --optimize-autoloader --no-scripts
 
 RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 777 /var/www/html/casino/storage \
-    && chmod -R 777 /var/www/html/casino/bootstrap/cache
+    && chmod -R 777 /var/www/html/storage \
+    && chmod -R 777 /var/www/html/bootstrap/cache
 
 RUN a2enmod rewrite headers
 
 RUN echo "<VirtualHost *:80> \n\
     ServerAdmin webmaster@localhost \n\
-    DocumentRoot /var/www/html/casino/public \n\
+    DocumentRoot /var/www/html/public \n\
     DirectoryIndex index.php index.html \n\
-    <Directory /var/www/html/casino/public> \n\
+    <Directory /var/www/html/public> \n\
         Options Indexes FollowSymLinks \n\
         AllowOverride All \n\
         Require all granted \n\
