@@ -31,7 +31,7 @@ RUN echo '<VirtualHost *:80> \n\
     CustomLog ${APACHE_LOG_DIR}/access.log combined \n\
 </VirtualHost>' > /etc/apache2/sites-available/000-default.conf
 
-RUN echo '#!/bin/bash' > /start.sh \
+RUN echo '#!/bin/bash' > /start.sh \n\
     && echo 'php artisan config:clear' >> /start.sh \n\
     && echo 'php artisan cache:clear' >> /start.sh \n\
     && echo 'php artisan route:clear' >> /start.sh \n\
