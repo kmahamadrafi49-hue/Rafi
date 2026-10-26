@@ -29,12 +29,11 @@ $kernel->terminate($request, $response);
 EOF
 
 RUN php << 'PHP'
-<?php
 $file = '/var/www/html/config/database.php';
-if(file_exists($file)) {
+if (file_exists($file)) {
     $content = file_get_contents($file);
-    if(strpos($content, "'mysql'") !== false) {
-        $content = str_replace("'mysql' => [", "'mysql1' => [", $content);
+    if (strpos($content, "mysql") !== false) {
+        $content = str_replace("'mysql' => '", "'mysql' => [", $content);
         file_put_contents($file, $content);
     }
 }
@@ -48,7 +47,7 @@ RUN echo '<VirtualHost *:80> \n\
     ServerAdmin webmaster@localhost \n\
     DocumentRoot /var/www/html/public \n\
     DirectoryIndex index.php \n\
-    <Directory /var/www/html/public> \n\
+    <Directory /var/www/html/> \n\
         Options Indexes FollowSymLinks \n\
         AllowOverride All \n\
         Require all granted \n\
@@ -60,9 +59,12 @@ RUN echo '<VirtualHost *:80> \n\
 RUN echo '#!/bin/bash' > /start.sh \
     && echo 'mkdir -p /var/www/html/storage/logs' >> /start.sh \
     && echo 'touch /var/www/html/storage/logs/laravel.log' >> /start.sh \
-    && echo 'mkdir -p /var/www/html/storage/framework/sessions /var/www/html/storage/framework/views /var/www/html/storage/framework/cache' >> /start.sh \
-    && echo 'chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache' >> /start.sh \
-    && echo 'chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache' >> /start.sh \
+    && echo 'mkdir -p /var/www/html/storage/framework/sessions' >> /start.sh \
+    && echo 'mkdir -p /var/www/html/storage/framework/views' >> /start.sh \
+    && echo 'mkdir -p /var/www/html/storage/framework/cache' >> /start.sh \
+    && echo 'chown -R www-data:www-data /var/www/html/storage' >> /start.sh \
+    && echo 'chmod -R 777 /var/www/html/storage' >> /start.sh \
+    && echo 'chmod -R 777 /var/www/html/bootstrap/cache' >> /start.sh \
     && echo 'php artisan cache:clear' >> /start.sh \
     && echo 'php artisan config:clear' >> /start.sh \
     && echo 'php artisan migrate --force' >> /start.sh \
