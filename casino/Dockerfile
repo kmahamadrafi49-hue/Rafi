@@ -31,11 +31,11 @@ RUN echo '<VirtualHost *:80> \n\
     CustomLog ${APACHE_LOG_DIR}/access.log combined \n\
 </VirtualHost>' > /etc/apache2/sites-available/000-default.conf
 
-RUN echo '#!/bin/bash' > /start.sh \
-    && echo 'php artisan config:clear' >> /start.sh \
-    && echo 'php artisan cache:clear' >> /start.sh \
-    && echo 'php artisan route:clear' >> /start.sh \
-    && echo 'php artisan migrate --force || true' >> /start.sh \
+RUN echo '#!/bin/bash' > /start.sh \n\
+    && echo 'php artisan config:clear' >> /start.sh \n\
+    && echo 'php artisan cache:clear' >> /start.sh \n\
+    && echo 'php artisan route:clear' >> /start.sh \n\
+    && echo 'php artisan migrate --force || true' >> /start.sh \n\
     && echo 'apache2-foreground' >> /start.sh
 
 RUN chmod +x /start.sh
