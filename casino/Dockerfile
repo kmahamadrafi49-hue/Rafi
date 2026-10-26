@@ -13,8 +13,8 @@ COPY . /var/www/html/
 RUN composer install --no-dev --optimize-autoloader --no-scripts
 
 RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 777 /var/www/html/storage \
-    && chmod -R 777 /var/www/html/bootstrap/cache
+    && chmod -R 777 /var/www/html/casino/storage \
+    && chmod -R 777 /var/www/html/casino/bootstrap/cache
 
 RUN a2enmod rewrite headers
 
@@ -32,6 +32,7 @@ RUN echo '<VirtualHost *:80> \n\
 </VirtualHost>' > /etc/apache2/sites-available/000-default.conf
 
 RUN echo '#!/bin/bash' > /start.sh \
+    && echo 'cd /var/www/html/casino' >> /start.sh \
     && echo 'php artisan config:clear' >> /start.sh \
     && echo 'php artisan cache:clear' >> /start.sh \
     && echo 'php artisan route:clear' >> /start.sh \
