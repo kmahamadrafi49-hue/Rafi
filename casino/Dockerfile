@@ -18,18 +18,18 @@ RUN chown -R www-data:www-data /var/www/html \
 
 RUN a2enmod rewrite headers
 
-RUN echo '<VirtualHost *:80> \n\
+RUN echo "<VirtualHost *:80> \n\
     ServerAdmin webmaster@localhost \n\
-    DocumentRoot /var/www/html/casino/public/casino/public/public \n\
+    DocumentRoot /var/www/html/public \n\
     DirectoryIndex index.php index.html \n\
     <Directory /var/www/html/public> \n\
         Options Indexes FollowSymLinks \n\
         AllowOverride All \n\
         Require all granted \n\
     </Directory> \n\
-    ErrorLog ${APACHE_LOG_DIR}/error.log \n\
-    CustomLog ${APACHE_LOG_DIR}/access.log combined \n\
-</VirtualHost>' > /etc/apache2/sites-available/000-default.conf
+    ErrorLog \${APACHE_LOG_DIR}/error.log \n\
+    CustomLog \${APACHE_LOG_DIR}/access.log combined \n\
+</VirtualHost>" > /etc/apache2/sites-available/000-default.conf
 
 EXPOSE 80
 
