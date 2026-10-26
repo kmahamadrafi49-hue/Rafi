@@ -10,6 +10,8 @@ WORKDIR /var/www/html
 
 COPY . /var/www/html/
 
+RUN composer install --no-dev --optimize-autoloader --no-scripts
+
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 777 /var/www/html/storage \
     && chmod -R 777 /var/www/html/bootstrap/cache
@@ -32,7 +34,8 @@ RUN echo '<VirtualHost *:80> \n\
 RUN echo '#!/bin/bash' > /start.sh \
     && echo 'php artisan config:clear' >> /start.sh \
     && echo 'php artisan cache:clear' >> /start.sh \
-    && echo 'php artisan migrate --force' >> /start.sh \
+    && echo 'php artisan route:clear' >> /start.sh \
+    && echo 'php artisan migrate --force || true' >> /start.sh \
     && echo 'apache2-foreground' >> /start.sh
 
 RUN chmod +x /start.sh
