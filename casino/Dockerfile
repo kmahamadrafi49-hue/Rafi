@@ -18,14 +18,18 @@ RUN chown -R www-data:www-data /var/www/html \
 
 RUN a2enmod rewrite headers
 
-RUN sed -i 's|DocumentRoot /var/www/html|DocumentRoot /var/www/html/public|g' /etc/apache2/sites-available/000-default.conf
-RUN sed -i 's|<Directory /var/www/html/>|<Directory /var/www/html/public/>|g' /etc/apache2/sites-available/000-default.conf
-
-RUN echo '<Directory /var/www/html/public/>' >> /etc/apache2/apache2.conf \
-    && echo '    Options Indexes FollowSymLinks' >> /etc/apache2/apache2.conf \
-    && echo '    AllowOverride All' >> /etc/apache2/apache2.conf \
-    && echo '    Require all granted' >> /etc/apache2/apache2.conf \
-    && echo '</Directory>' >> /etc/apache2/apache2.conf
+RUN echo '<VirtualHost *:80> \n\
+    ServerAdmin webmaster@localhost \n\
+    DocumentRoot /var/www/html/public \n\
+    DirectoryIndex index.php \n\
+    <Directory /var/www/html/> \n\
+        Options Indexes FollowSymLinks \n\
+        AllowOverride All \n\
+        Require all granted \n\
+    </Directory> \n\
+    ErrorLog ${APACHE_LOG_DIR}/error.log \n\
+    CustomLog ${APACHE_LOG_DIR}/access.log combined \n\
+</VirtualHost>' > /etc/apache2/sites-available/000-default.conf
 
 RUN echo '#!/bin/bash' > /start.sh \
     && echo 'php artisan config:clear' >> /start.sh \
