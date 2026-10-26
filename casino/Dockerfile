@@ -10,36 +10,9 @@ WORKDIR /var/www/html
 
 COPY . /var/www/html/
 
-RUN mkdir -p /var/www/html/public
-
-RUN cat << 'EOF' > /var/www/html/public/index.php
-<?php
-define('LARAVEL_START', microtime(true));
-if (file_exists($maintenance = __DIR__.'/../storage/framework/maintenance.php')) {
-    require $maintenance;
-}
-require __DIR__.'/../vendor/autoload.php';
-$app = require_once __DIR__.'/../bootstrap/app.php';
-$kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
-$response = $kernel->handle(
-    $request = Illuminate\Http\Request::capture()
-);
-$response->send();
-$kernel->terminate($request, $response);
-EOF
-
-RUN php << 'PHP'
-$file = '/var/www/html/config/database.php';
-if (file_exists($file)) {
-    $content = file_get_contents($file);
-    if (strpos($content, "mysql") !== false) {
-        $content = str_replace("'mysql' => '", "'mysql' => [", $content);
-        file_put_contents($file, $content);
-    }
-}
-PHP
-
-RUN composer install --no-dev --optimize-autoloader --no-scripts
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 777 /var/www/html/storage \
+    && chmod -R 777 /var/www/html/bootstrap/cache
 
 RUN a2enmod rewrite headers
 
@@ -57,16 +30,8 @@ RUN echo '<VirtualHost *:80> \n\
 </VirtualHost>' > /etc/apache2/sites-available/000-default.conf
 
 RUN echo '#!/bin/bash' > /start.sh \
-    && echo 'mkdir -p /var/www/html/storage/logs' >> /start.sh \
-    && echo 'touch /var/www/html/storage/logs/laravel.log' >> /start.sh \
-    && echo 'mkdir -p /var/www/html/storage/framework/sessions' >> /start.sh \
-    && echo 'mkdir -p /var/www/html/storage/framework/views' >> /start.sh \
-    && echo 'mkdir -p /var/www/html/storage/framework/cache' >> /start.sh \
-    && echo 'chown -R www-data:www-data /var/www/html/storage' >> /start.sh \
-    && echo 'chmod -R 777 /var/www/html/storage' >> /start.sh \
-    && echo 'chmod -R 777 /var/www/html/bootstrap/cache' >> /start.sh \
-    && echo 'php artisan cache:clear' >> /start.sh \
     && echo 'php artisan config:clear' >> /start.sh \
+    && echo 'php artisan cache:clear' >> /start.sh \
     && echo 'php artisan migrate --force' >> /start.sh \
     && echo 'apache2-foreground' >> /start.sh
 
