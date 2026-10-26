@@ -22,7 +22,7 @@ RUN echo '<VirtualHost *:80> \n\
     ServerAdmin webmaster@localhost \n\
     DocumentRoot /var/www/html/public \n\
     DirectoryIndex index.php \n\
-    <Directory /var/www/html/> \n\
+    <Directory /var/www/html/public> \n\
         Options Indexes FollowSymLinks \n\
         AllowOverride All \n\
         Require all granted \n\
