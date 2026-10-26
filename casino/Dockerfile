@@ -13,8 +13,8 @@ COPY . /var/www/html/
 RUN composer install --no-dev --optimize-autoloader --no-scripts
 
 RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 777 /var/www/html/casino/storage \
-    && chmod -R 777 /var/www/html/casino/bootstrap/cache
+    && chmod -R 777 /var/www/html/storage \
+    && chmod -R 777 /var/www/html/bootstrap/cache
 
 RUN a2enmod rewrite headers
 
