@@ -20,9 +20,9 @@ RUN a2enmod rewrite headers
 
 RUN echo "<VirtualHost *:80> \n\
     ServerAdmin webmaster@localhost \n\
-    DocumentRoot /var/www/html/public \n\
+    DocumentRoot /var/www/html \n\
     DirectoryIndex index.php index.html \n\
-    <Directory /var/www/html/public> \n\
+    <Directory /var/www/html> \n\
         Options Indexes FollowSymLinks \n\
         AllowOverride All \n\
         Require all granted \n\
