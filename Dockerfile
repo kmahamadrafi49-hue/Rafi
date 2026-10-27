@@ -18,8 +18,9 @@ RUN chown -R www-data:www-data /var/www/html \
 
 RUN a2enmod rewrite headers
 
-RUN sed -i 's|/var/www/html|/var/www/html/public|g' /etc/apache2/sites-available/000-default.conf
-RUN sed -i 's|/var/www/html|/var/www/html/public|g' /etc/apache2/apache2.conf
+RUN sed -i 's|DocumentRoot /var/www/html|DocumentRoot /var/www/html/public|g' /etc/apache2/sites-available/000-default.conf
+RUN sed -i '<Directory /var/www/html/>|<Directory /var/www/html/public/>|g' /etc/apache2/apache2.conf || true
+RUN echo '<Directory /var/www/html/public>\n\tOptions Indexes FollowSymLinks\n\tAllowOverride All\n\tRequire all granted\n</Directory>' >> /etc/apache2/apache2.conf
 
 RUN sed -i "s/80/\${PORT}/g" /etc/apache2/sites-available/000-default.conf /etc/apache2/ports.conf
 
