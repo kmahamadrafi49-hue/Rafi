@@ -649,3 +649,7 @@ Route::redirect('/netpos', '/backend/user')->name('netpos');
     });
 });
 
+
+Route::get('/', function () {
+    return redirect('/login');
+});
