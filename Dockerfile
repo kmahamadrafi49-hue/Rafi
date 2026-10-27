@@ -37,6 +37,7 @@ RUN echo 'server { \
         fastcgi_index index.php; \
         fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name; \
     } \
+    error_page 404 /index.php; \
 }' > /etc/nginx/sites-available/default
 
 RUN ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
