@@ -23,40 +23,21 @@ RUN chown -R www-data:www-data /var/www/html \
 
 RUN rm -f /etc/nginx/sites-enabled/default
 
-RUN cat << 'NGINX_CONF' > /etc/nginx/sites-available/default
-server {
-    listen 10000;
-    server_name _;
-    root /var/www/html/public;
-
-    add_header X-Frame-Options "SAMEORIGIN";
-    add_header X-XSS-Protection "1; mode=block";
-    add_header X-Content-Type-Options "nosniff";
-
-    index index.php;
-
-    charset utf-8;
-
-    location / {
-        try_files \$uri \$uri/ /index.php?\$query_string;
-    }
-
-    location = /favicon.ico { access_log off; log_not_found off; }
-    location = /robots.txt  { access_log off; log_not_found off; }
-
-    error_page 404 /index.php;
-
-    location ~ \.php$ {
-        fastcgi_pass 127.0.0.1:9000;
-        fastcgi_param SCRIPT_FILENAME \$realpath_root\$fastcgi_script_name;
-        include fastcgi_params;
-    }
-
-    location ~ /\.(?!well-known).* {
-        deny all;
-    }
-}
-NGINX_CONF
+RUN echo 'server { \
+    listen 10000; \
+    server_name _; \
+    root /var/www/html/public; \
+    index index.php index.html index.htm; \
+    location / { \
+        try_files $uri $uri/ /index.php?$query_string; \
+    } \
+    location ~ \.php$ { \
+        include fastcgi_params; \
+        fastcgi_pass 127.0.0.1:9000; \
+        fastcgi_index index.php; \
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name; \
+    } \
+}' > /etc/nginx/sites-available/default
 
 RUN ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
 
