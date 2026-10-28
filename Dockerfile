@@ -23,25 +23,10 @@ RUN chown -R www-data:www-data /var/www/html \
 
 RUN rm -f /etc/nginx/sites-enabled/default
 
-RUN echo "server {\n\
-    listen 10000;\n\
-    server_name _;\n\
-    root /var/www/html/public;\n\
-    index index.php index.html index.htm;\n\
-    location / {\n\
-        try_files \$uri \$uri/ /index.php?\$query_string;\n\
-    }\n\
-    location ~ \.php\$ {\n\
-        include fastcgi_params;\n\
-        fastcgi_pass 127.0.0.1:9000;\n\
-        fastcgi_index index.php;\n\
-        fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;\n\
-    }\n\
-    error_page 404 /index.php;\n\
-}" > /etc/nginx/sites-available/default
+RUN echo "server { listen 10000; server_name _; root /var/www/html/public; index index.php index.html index.htm; location / { try_files \$uri \$uri/ /index.php?\$query_string; } location ~ \.php\$ { include fastcgi_params; fastcgi_pass 127.0.0.1:9000; fastcgi_index index.php; fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name; } error_page 404 /index.php; }" > /etc/nginx/sites-available/default
 
 RUN ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
 
 EXPOSE 10000
 
-CMD service nginx start && php-fpm -D && php artisan migrate --force && tail -f /var/log/nginx/access.log
+CMD ["./start.sh"]
