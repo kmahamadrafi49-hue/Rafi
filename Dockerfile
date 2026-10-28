@@ -44,4 +44,4 @@ RUN ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
 
 EXPOSE 10000
 
-CMD service nginx start && php-fpm -D && php artisan config:clear && php artisan route:clear && tail -f /var/log/nginx/access.log
+CMD service nginx start && php-fpm -D && tail -f /var/log/nginx/access.log
