@@ -44,4 +44,4 @@ RUN ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
 
 EXPOSE 10000
 
-CMD service nginx start && php-fpm -D && php artisan migrate --force && tail -f /var/log/nginx/access.log
+CMD service nginx start && php-fpm -D && tail -f /var/log/nginx/access.log
