@@ -1,47 +1,41 @@
 FROM php:8.4-fpm
 
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
-    nginx \
     git \
-    unzip \
-    libzip-dev \
+    curl \
     libpng-dev \
     libonig-dev \
-    && docker-php-ext-install pdo pdo_mysql mysqli zip gd
+    libxml2-dev \
+    libpq-dev \
+    zip \
+    unzip \
+    nginx
 
+# Clear cache
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install PHP extensions including PostgreSQL (pdo_pgsql)
+RUN docker-php-ext-install pdo pdo_pgsql pgsql mbstring exif pcntl bcmath gd
+
+# Get latest Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
+# Set working directory
 WORKDIR /var/www/html
 
+# Copy existing application directory contents
 COPY . /var/www/html
 
-RUN composer install --no-dev --optimize-autoloader --no-scripts
+# Copy nginx configuration or setup
+# (Ensure your document root points to /var/www/html/public)
 
-RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 777 /var/www/html/storage \
-    && chmod -R 777 /var/www/html/bootstrap/cache
+# Install PHP dependencies
+RUN composer install --no-dev --optimize-autoloader
 
-RUN rm -f /etc/nginx/sites-enabled/default
+# Set permissions
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-RUN echo 'server { \
-    listen 10000; \
-    server_name _; \
-    root /var/www/html/public; \
-    index index.php index.html index.htm; \
-    location / { \
-        try_files $uri $uri/ /index.php?$query_string; \
-    } \
-    location ~ \.php$ { \
-        include fastcgi_params; \
-        fastcgi_pass 127.0.0.1:9000; \
-        fastcgi_index index.php; \
-        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name; \
-    } \
-    error_page 404 /index.php; \
-}' > /etc/nginx/sites-available/default
+EXPOSE 80
 
-RUN ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
-
-EXPOSE 10000
-
-CMD service nginx start && php-fpm -D && tail -f /var/log/nginx/access.log
+CMD php artisan config:cache && php artisan route:cache && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=80
