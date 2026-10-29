@@ -6,6 +6,9 @@ Route::namespace ('Frontend')->middleware(['siteisclosed', 'checker'])->group(fu
 
     Route::get('login', ['as' => 'frontend.auth.login', 'uses' => 'Auth\AuthController@getLogin']);
 
+Route::get('/', function () {
+    return redirect('/login');
+});
     Route::get('launcher/{game}/{token}', 'Auth\AuthController@apiLogin');
 
     Route::get('refresh-csrf', function ()
