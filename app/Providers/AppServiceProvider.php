@@ -22,6 +22,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 // Added to fix redirect loop
 use Illuminate\Support\Facades\URL;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -33,29 +34,35 @@ class AppServiceProvider extends ServiceProvider
     public function boot()
     {
         Carbon::setLocale(config('app.locale'));
-        config(['app.name' => settings('app_name')]);
+        
+        // డేటాబేస్ టేబుల్ లేకపోయినా క్రాష్ అవ్వకుండా సేఫ్టీ చెక్
+        try {
+            if (Schema::hasTable('settings')) {
+                config(['app.name' => settings('app_name')]);
+            }
+        } catch (\Exception $e) {
+            // టేబుల్ లేకపోతే ఇగ్నోర్ చేస్తుంది
+        }
+
         \Illuminate\Database\Schema\Builder::defaultStringLength(191);
 
         // Added to fix 10 internal redirects loop on Render HTTPS proxy
         URL::forceScheme('https');
         Request::setTrustedProxies(
             ['*'],
-            Request::HEADER_X_FORWARDED_FOR | 
-            Request::HEADER_X_FORWARDED_HOST | 
-            Request::HEADER_X_FORWARDED_PORT | 
+            Request::HEADER_X_FORWARDED_FOR |
+            Request::HEADER_X_FORWARDED_HOST |
+            Request::HEADER_X_FORWARDED_PORT |
             Request::HEADER_X_FORWARDED_PROTO
         );
 
-        /*
-        if($this->app->environment('production')) {
-            \URL::forceScheme('http');
+        if ($this->app->environment('production')) {
+            // URL::forceScheme('http');
         }
-        */
 
         Paginator::useBootstrap();
 
         // Enable pagination
-        /*
         if (!Collection::hasMacro('paginate')) {
             Collection::macro('paginate',
                 function ($perPage = 15, $page = null, $options = []) {
@@ -64,9 +71,9 @@ class AppServiceProvider extends ServiceProvider
                         $this->forPage($page, $perPage)->values()->all(),
                         $this->count(), $perPage, $page, $options
                     ))->withPath('');
-                });
+                }
+            );
         }
-        */
     }
 
     /**
@@ -78,13 +85,13 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->singleton(UserRepository::class, EloquentUser::class);
         $this->app->singleton(ActivityRepository::class, EloquentActivity::class);
-        $this->app->singleton(PermissionRepository::class, EloquentPermission::class);
-        $this->app->singleton(SessionRepository::class, DbSession::class);
         $this->app->singleton(CountryRepository::class, EloquentCountry::class);
+        $this->app->singleton(PermissionRepository::class, EloquentPermission::class);
+        $this->app->singleton(SessionRepository::class, EloquentSession::class);
 
         if ($this->app->environment('local')) {
-            //$this->app->register(\Barryvdh\LaravelIdeHelper\IdeHelperServiceProvider::class);
-            //$this->app->register(\Barryvdh\Debugbar\ServiceProvider::class);
+            // $this->app->register(\LaravelIdeHelper\IdeHelperServiceProvider::class);
+            // $this->app->register(\Barryvdh\Debugbar\class);
         }
     }
 }
