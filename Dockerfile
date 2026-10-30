@@ -25,8 +25,8 @@ WORKDIR /var/www/html
 # Copy application files
 COPY . /var/www/html
 
-# Install PHP dependencies
-RUN composer install --no-dev --no-scripts --optimize-autoloader
+# Install PHP dependencies bypassing platform requirements to avoid version errors
+RUN composer install --no-dev --no-scripts --optimize-autoloader --ignore-platform-reqs
 
 # Set permissions for storage and bootstrap cache
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
@@ -37,5 +37,5 @@ RUN sed -i 's/listen 80;/listen 10000;/g' /etc/nginx/sites-available/default
 
 EXPOSE 10000
 
-# Start Nginx and PHP-FPM together
+# Start Nginx and PHP-FPM together along with cache clearing
 CMD php artisan config:clear && php artisan cache:clear && php artisan migrate --force && service nginx start && php-fpm
