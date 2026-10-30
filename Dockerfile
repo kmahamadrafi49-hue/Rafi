@@ -32,10 +32,8 @@ RUN composer install --no-dev --no-scripts --optimize-autoloader --ignore-platfo
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 RUN chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Configure Nginx to point to Laravel's public directory, add index.php, and use Render's PORT (10000)
-RUN sed -i 's#/var/www/html#/var/www/html/public#g' /etc/nginx/sites-available/default
-RUN sed -i 's/index index.html index.htm;/index index.php index.html index.htm;/g' /etc/nginx/sites-available/default
-RUN sed -i 's/listen 80;/listen 10000;/g' /etc/nginx/sites-available/default
+# Copy custom Nginx configuration
+COPY nginx.conf /etc/nginx/sites-available/default
 
 EXPOSE 10000
 
