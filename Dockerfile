@@ -41,4 +41,4 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 10000
 
 # Start Nginx and PHP-FPM together
-CMD php artisan config:clear && php artisan cache:clear && php artisan route:clear && php artisan migrate --force && service nginx start && php-fpm
+CMD php artisan config:clear && php artisan cache:clear && php artisan route:clear && php artisan serve --host=0.0.0.0 --port=10000
