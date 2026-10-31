@@ -1,6 +1,5 @@
 FROM php:8.4-fpm
 
-
 # Install system dependencies and Nginx
 RUN apt-get update && apt-get install -y \
     git \
@@ -26,8 +25,8 @@ WORKDIR /var/www/html
 # Copy application files
 COPY . /var/www/html
 
-# Install PHP dependencies
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+# Install PHP dependencies with --no-scripts to prevent database check errors during build
+RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
 
 # Set permissions for storage and bootstrap cache
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
