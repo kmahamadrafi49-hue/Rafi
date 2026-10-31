@@ -2,7 +2,7 @@
 
 return [
 
-    'default' => trim(env('DB_CONNECTION', 'mysql')),
+    'default' => env('DB_CONNECTION', 'mysql'),
 
     'connections' => [
 
@@ -28,10 +28,9 @@ return [
             'prefix_indexes' => true,
             'strict' => false,
             'engine' => null,
-            'options' => [
-                PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => true,
+            'options' => extension_loaded('pdo_mysql') ? array_filter([
                 PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false,
-            ],
+            ]) : [],
         ],
 
         'pgsql' => [
@@ -77,18 +76,18 @@ return [
 
         'default' => [
             'url' => env('REDIS_URL'),
-            'host' => env('REDIS_DB_HOST', '127.0.0.1'),
+            'host' => env('REDIS_HOST', '127.0.0.1'),
             'password' => env('REDIS_PASSWORD', null),
             'port' => env('REDIS_PORT', '6379'),
-            'database' => env('REDIS_DB', '0'),
+            'database' => env('DB_REDIS_DATABASE', '0'),
         ],
 
         'cache' => [
             'url' => env('REDIS_URL'),
-            'host' => env('REDIS_DB_HOST', '127.0.0.1'),
+            'host' => env('REDIS_HOST', '127.0.0.1'),
             'password' => env('REDIS_PASSWORD', null),
             'port' => env('REDIS_PORT', '6379'),
-            'database' => env('REDIS_CACHE_DB', '1'),
+            'database' => env('DB_REDIS_CACHE_DATABASE', '1'),
         ],
 
     ],
