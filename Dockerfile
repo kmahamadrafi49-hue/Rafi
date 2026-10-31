@@ -50,8 +50,9 @@ RUN echo "server { \
 
 EXPOSE 10000
 
-# Start Nginx and PHP-FPM together with .env creation and cache clearing
-CMD php -r "file_put_contents('.env', 'APP_ENV=production\nAPP_DEBUG=true\nAPP_KEY=base64:X7v6Q8m2K9s3L5p1R4w0N8x2Z6y1H3j5F7d9G2b4V1o=\nDB_CONNECTION=pgsql\n');" && \
+# Start Nginx and PHP-FPM together with .env creation, DATABASE_URL linking, and migrations
+CMD php -r "file_put_contents('.env', 'APP_ENV=production\nAPP_DEBUG=true\nAPP_KEY=base64:X7v6Q8m2K9s3L5p1R4w0N8x2Z6y1H3j5F7d9G2b4V1o=\nDB_CONNECTION=pgsql\nDATABASE_URL=' . getenv('DATABASE_URL') . '\n');" && \
     php artisan config:clear && \
     php artisan cache:clear && \
+    php artisan migrate --force || true && \
     service nginx start && php-fpm
