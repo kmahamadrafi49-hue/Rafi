@@ -26,18 +26,17 @@ WORKDIR /var/www/html
 COPY . /var/www/html
 
 # Install PHP dependencies bypassing platform requirements to avoid version errors
-RUN composer install --no-dev --no-scripts --optimize-autoloader --ignore-platform-reqs
+RUN composer install --no-dev --scripts --optimize-autoloader --ignore-platform-reqs
 
 # Set permissions for storage and bootstrap cache
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Configure Nginx to point to Laravel's public directory and use Render's PORT (10000)
-RUN sed -i 's#/var/www/html#/var/www/html/public#g' /etc/nginx/sites-available/default
-RUN sed -i 's/listen 80;/listen 10000;/g' /etc/nginx/sites-available/default
+# Configure Nginx root to point to Laravel's public directory and use Render's PORT (10000)
+RUN sed -i 's|root /var/www/html;|root /var/www/html/public;|g' /etc/nginx/sites-available/default
+RUN sed -i 's|listen 80 default_server;|listen 10000 default_server;|g' /etc/nginx/sites-available/default
+RUN sed -i 's|listen [::]:80 default_server;|listen [::]:10000 default_server;|g' /etc/nginx/sites-available/default
 
 EXPOSE 10000
 
 # Start Nginx and PHP-FPM together along with cache clearing
 CMD php artisan config:clear && php artisan cache:clear && service nginx start && php-fpm
-
-
