@@ -50,5 +50,5 @@ RUN echo 'server {\
 
 EXPOSE 10000
 
-# Start Nginx and PHP-FPM together
-CMD php artisan config:clear && php artisan cache:clear && service nginx start && php-fpm
+# Start Nginx and PHP-FPM together with route cache clearing
+CMD php artisan config:clear && php artisan cache:clear && php artisan route:clear && service nginx start && php-fpm
