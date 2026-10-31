@@ -25,16 +25,8 @@ WORKDIR /var/www/html
 # Copy application files
 COPY . /var/www/html
 
-# Create a temporary .env file before running composer install to avoid MySQL connection errors during package discovery
-RUN echo "APP_ENV=production" > .env && \
-    echo "APP_DEBUG=true" >> .env && \
-    echo "APP_KEY=base64:X7v6Q8m2K9s3L5p1R4w0N8x2Z6y1H3j5F7d9G2b4V1o=" >> .env && \
-    echo "DB_CONNECTION=pgsql" >> .env && \
-    echo "SESSION_DRIVER=file" >> .env && \
-    echo "CACHE_DRIVER=file" >> .env
-
-# Install PHP dependencies safely
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+# Install PHP dependencies without running scripts to avoid database connection errors during build
+RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
 
 # Set permissions for storage and bootstrap cache
 RUN mkdir -p storage/framework/sessions storage/framework/views storage/framework/cache storage/logs && \
