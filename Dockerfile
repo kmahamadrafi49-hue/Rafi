@@ -25,7 +25,7 @@ WORKDIR /var/www/html
 # Copy application files
 COPY . /var/www/html
 
-# Install dependencies cleanly without running database scripts during build
+# Install dependencies cleanly without running scripts
 RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
 
 # Set absolute permissions for storage and bootstrap cache
@@ -52,11 +52,13 @@ RUN echo "server { \
 
 EXPOSE 10000
 
-# Start Nginx and PHP-FPM with live DATABASE_URL mapping and clearing caches
+# Start Nginx and PHP-FPM, map DATABASE_URL, create sessions table, and run migrations safely
 CMD php -r "file_put_contents('.env', 'APP_ENV=production\nAPP_DEBUG=true\nAPP_KEY=base64:X7v6Q8m2K9s3L5p1R4w0N8x2Z6y1H3j5F7d9G2b4V1o=\nDB_CONNECTION=pgsql\nDATABASE_URL=' . getenv('DATABASE_URL') . '\nSESSION_DRIVER=file\nCACHE_DRIVER=file\n');" && \
     chmod -R 777 storage bootstrap/cache && \
     php artisan config:clear && \
     php artisan cache:clear && \
     php artisan route:clear && \
     php artisan view:clear && \
+    php -r "\$url = getenv('DATABASE_URL'); \$dbOpts = parse_url(\$url); \$pdo = new PDO('pgsql:host=' . \$dbOpts['host'] . ';port=' . (\$dbOpts['port'] ?? 5432) . ';dbname=' . ltrim(\$dbOpts['path'], '/'), \$dbOpts['user'], \$dbOpts['pass']); \$pdo->exec('CREATE TABLE IF NOT EXISTS sessions (id VARCHAR(255) PRIMARY KEY, user_id BIGINT, ip_address VARCHAR(45), user_agent TEXT, payload TEXT NOT NULL, last_activity INT NOT NULL)');" || true && \
+    php artisan migrate --force || true && \
     service nginx start && php-fpm
