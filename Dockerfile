@@ -38,4 +38,6 @@ RUN sed -i 's/listen 80;/listen 10000;/g' /etc/nginx/sites-available/default
 EXPOSE 10000
 
 # Start Nginx and PHP-FPM together along with cache clearing
-CMD php artisan config:clear && php artisan cache:clear && php artisan migrate --force && service nginx start && php-fpm
+CMD php artisan config:clear && php artisan cache:clear && service nginx start && php-fpm
+
+
