@@ -20,7 +20,7 @@ WORKDIR /var/www/html
 COPY . .
 
 # Install PHP dependencies via Composer
-RUN composer install --no-dev --optimize-autoloader
+RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs
 
 # Set Apache document root to public folder
 ENV APACHE_DOCUMENT_ROOT /var/www/html/public
