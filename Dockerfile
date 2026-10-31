@@ -1,6 +1,6 @@
-FROM php:8.4-fpm
+FROM php:8.2-fpm
 
-# Install system dependencies
+# Install system dependencies and Nginx
 RUN apt-get update && apt-get install -y \
     git \
     curl \
@@ -10,29 +10,32 @@ RUN apt-get update && apt-get install -y \
     libpq-dev \
     zip \
     unzip \
-    nginx
+    nginx \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Clear cache
-RUN apt-get clean && rm -rf /var/lib/apt/lists/*
-
-# Install PHP extensions including both MySQL and PostgreSQL drivers
+# Install PHP extensions
 RUN docker-php-ext-install pdo pdo_mysql pdo_pgsql pgsql mbstring exif pcntl bcmath gd
 
-# Get latest Composer
+# Get Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Set working directory
 WORKDIR /var/www/html
 
-# Copy existing application directory contents
+# Copy application files
 COPY . /var/www/html
 
-# Install PHP dependencies without running scripts that trigger database config loading
-RUN composer install --no-dev --no-scripts --optimize-autoloader
+# Install PHP dependencies bypassing platform requirements to avoid version errors
+RUN composer install --no-dev --no-scripts --optimize-autoloader --ignore-platform-reqs
 
-# Set permissions
+# Set permissions for storage and bootstrap cache
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-EXPOSE 80
+# Configure Nginx to point to Laravel's public directory and use Render's PORT (10000)
+RUN sed -i 's#/var/www/html#/var/www/html/public#g' /etc/nginx/sites-available/default
+RUN sed -i 's/listen 80;/listen 10000;/g' /etc/nginx/sites-available/default
 
-CMD php artisan config:clear && php artisan cache:clear && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=80
+EXPOSE 10000
+
+# Start Nginx and PHP-FPM together along with cache clearing
+CMD php artisan config:clear && php artisan cache:clear && php artisan migrate --force && service nginx start && php-fpm
