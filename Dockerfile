@@ -25,17 +25,8 @@ WORKDIR /var/www/html
 # Copy application files
 COPY . /var/www/html
 
-# Create a temporary environment file so package discovery can run successfully during build
-RUN echo "APP_ENV=production" > .env && \
-    echo "APP_DEBUG=true" >> .env && \
-    echo "APP_KEY=base64:X7v6Q8m2K9s3L5p1R4w0N8x2Z6y1H3j5F7d9G2b4V1o=" >> .env && \
-    echo "DB_CONNECTION=pgsql" >> .env && \
-    echo "SESSION_DRIVER=file" >> .env && \
-    echo "CACHE_DRIVER=file" >> .env
-
-# Install PHP dependencies and run package discovery to bind repositories properly
-RUN composer install --no-dev --optimize-autoloader --no-interaction && \
-    composer dump-autoload --optimize
+# Install dependencies cleanly without running database scripts during build
+RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
 
 # Set absolute permissions for storage and bootstrap cache
 RUN mkdir -p storage/framework/sessions storage/framework/views storage/framework/cache storage/logs && \
@@ -61,7 +52,7 @@ RUN echo "server { \
 
 EXPOSE 10000
 
-# Start Nginx and PHP-FPM with live DATABASE_URL mapping and clearing all caches
+# Start Nginx and PHP-FPM with live DATABASE_URL mapping and clearing caches
 CMD php -r "file_put_contents('.env', 'APP_ENV=production\nAPP_DEBUG=true\nAPP_KEY=base64:X7v6Q8m2K9s3L5p1R4w0N8x2Z6y1H3j5F7d9G2b4V1o=\nDB_CONNECTION=pgsql\nDATABASE_URL=' . getenv('DATABASE_URL') . '\nSESSION_DRIVER=file\nCACHE_DRIVER=file\n');" && \
     chmod -R 777 storage bootstrap/cache && \
     php artisan config:clear && \
