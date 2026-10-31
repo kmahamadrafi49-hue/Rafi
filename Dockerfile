@@ -25,8 +25,8 @@ WORKDIR /var/www/html
 # Copy application files
 COPY . /var/www/html
 
-# Install PHP dependencies (corrected composer command)
-RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs
+# Install PHP dependencies with --no-scripts to prevent DB connection errors during build
+RUN composer install --no-dev --no-scripts --optimize-autoloader --ignore-platform-reqs
 
 # Set permissions for storage and bootstrap cache
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
