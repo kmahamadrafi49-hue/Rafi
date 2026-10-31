@@ -1,34 +1,38 @@
-FROM php:8.2-apache
+FROM php:8.4-fpm
 
-# Install system dependencies and Composer
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     git \
     curl \
     libpng-dev \
     libonig-dev \
     libxml2-dev \
+    libpq-dev \
     zip \
-    unzip
+    unzip \
+    nginx
+
+# Clear cache
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install PHP extensions including both MySQL and PostgreSQL drivers
+RUN docker-php-ext-install pdo pdo_mysql pdo_pgsql pgsql mbstring exif pcntl bcmath gd
 
 # Get latest Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Working directory
+# Set working directory
 WORKDIR /var/www/html
 
-# Copy project files
-COPY . .
+# Copy existing application directory contents
+COPY . /var/www/html
 
-# Install PHP dependencies via Composer
-RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs
+# Install PHP dependencies without running scripts that trigger database config loading
+RUN composer install --no-dev --no-scripts --optimize-autoloader
 
-# Set Apache document root to public folder
-ENV APACHE_DOCUMENT_ROOT /var/www/html/public
-RUN sed -ri -s 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
-RUN sed -ri -s 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
-
-# Permissions
+# Set permissions
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-EXPOSE 10000
-CMD php artisan config:clear && php artisan cache:clear && php artisan route:clear && apache2-foreground
+EXPOSE 80
+
+CMD php artisan config:clear && php artisan cache:clear && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=80
