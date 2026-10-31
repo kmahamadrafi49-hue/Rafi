@@ -29,7 +29,8 @@ COPY . /var/www/html
 RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
 
 # Set permissions for storage and bootstrap cache
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+RUN chmod -R 777 storage bootstrap/cache && \
+    chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
 # Overwrite Nginx default site configuration directly to point to public folder and port 10000
 RUN echo "server { \
@@ -50,9 +51,8 @@ RUN echo "server { \
 
 EXPOSE 10000
 
-# Start Nginx and PHP-FPM together with .env creation, DATABASE_URL linking, and migrations
+# Start Nginx and PHP-FPM together with .env creation, DATABASE_URL linking, and cache clearing
 CMD php -r "file_put_contents('.env', 'APP_ENV=production\nAPP_DEBUG=true\nAPP_KEY=base64:X7v6Q8m2K9s3L5p1R4w0N8x2Z6y1H3j5F7d9G2b4V1o=\nDB_CONNECTION=pgsql\nDATABASE_URL=' . getenv('DATABASE_URL') . '\n');" && \
     php artisan config:clear && \
     php artisan cache:clear && \
-    php artisan migrate --force || true && \
     service nginx start && php-fpm
