@@ -16,20 +16,20 @@ return [
     |
     */
 
-    'driver' => env('SESSION_DRIVER', 'database'),
+    'driver' => 'file',
 
     /*
     |--------------------------------------------------------------------------
     | Session Lifetime
     |--------------------------------------------------------------------------
     |
-    | Here you may specify the number of minutes that you wish the session
+    | Here you may specify the number of minutes that you wish the sessions
     | to be allowed to remain idle before it expires. If you want them
     | to immediately expire on the browser closing, set that option.
     |
     */
 
-    'lifetime' => 1 * (60 * 24 * 365),
+    'lifetime' => (60 * 24 * 365),
 
     'expire_on_close' => false,
 
@@ -79,7 +79,7 @@ return [
     |
     | When using the "database" session driver, you may specify the table we
     | should use to manage the sessions. Of course, a sensible default is
-    | provided for you; however, you are free to change this as needed.
+    | provided for you, however, you are free to change this as needed.
     |
     */
 
@@ -95,6 +95,7 @@ return [
     | correspond with one of the application's configured cache stores.
     |
     */
+
     'store' => null,
 
     /*
@@ -116,14 +117,14 @@ return [
     |--------------------------------------------------------------------------
     |
     | Here you may change the name of the cookie used to identify a session
-    | instance by ID. The name specified here will get used every time a
-    | new session cookie is created by the framework for every driver.
+    | instance by ID. The name specified here will be used every time
+    | a new session cookie is created by the framework for every driver.
     |
     */
 
     'cookie' => env(
         'SESSION_COOKIE',
-        str_slug(env('APP_NAME', 'laravel'), '_').'_session'
+        Str::slug(env('APP_NAME', 'laravel'), '_').'_session'
     ),
 
     /*
@@ -159,7 +160,7 @@ return [
     |
     | By setting this option to true, session cookies will only be sent back
     | to the server if the browser has a HTTPS connection. This will keep
-    | the cookie from being sent to you if it can not be done securely.
+    | the cookie from being sent to you (if it can not be done securely).
     |
     */
 
@@ -170,11 +171,12 @@ return [
     | HTTP Access Only
     |--------------------------------------------------------------------------
     |
-    | Setting this value to true will prevent JavaScript from accessing the
-    | value of the cookie and the cookie will only be accessible through
+    | Setting this value to true will prevent JavaScript from accessing
+    | the value of the cookie and the cookie will only be accessible through
     | the HTTP protocol. You are free to modify this option if needed.
     |
     */
+
     'http_only' => false,
 
     /*
@@ -189,6 +191,7 @@ return [
     | Supported: "lax", "strict"
     |
     */
+
     'same_site' => null,
 
 ];
