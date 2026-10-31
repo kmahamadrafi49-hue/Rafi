@@ -1,8 +1,5 @@
-Route::get('/test-live', function () {
-    return "Laravel is working perfectly!";
-});
-
-
+<?php
+use Illuminate\Support\Facades\Route;
 
 Route::namespace ('Frontend')->middleware(['siteisclosed', 'checker'])->group(function ()
 {
