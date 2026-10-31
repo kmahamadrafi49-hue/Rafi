@@ -25,17 +25,8 @@ WORKDIR /var/www/html
 # Copy application files
 COPY . /var/www/html
 
-# Create temporary SQLite environment for safe building
-RUN echo "APP_ENV=production" > .env && \
-    echo "APP_DEBUG=true" >> .env && \
-    echo "APP_KEY=base64:X7v6Q8m2K9s3L5p1R4w0N8x2Z6y1H3j5F7d9G2b4V1o=" >> .env && \
-    echo "DB_CONNECTION=sqlite" >> .env && \
-    echo "SESSION_DRIVER=file" >> .env && \
-    echo "CACHE_DRIVER=file" >> .env
-
-# Install dependencies and regenerate autoload files to fix repository bindings
-RUN composer install --no-dev --optimize-autoloader --no-interaction && \
-    composer dump-autoload --optimize
+# Install dependencies completely without scripts to prevent database errors during build
+RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
 
 # Set permissions for storage and bootstrap cache
 RUN mkdir -p storage/framework/sessions storage/framework/views storage/framework/cache storage/logs && \
@@ -70,5 +61,4 @@ CMD php -r "file_put_contents('.env', 'APP_ENV=production\nAPP_DEBUG=true\nAPP_K
     chmod -R 777 storage bootstrap/cache && \
     php artisan config:clear && \
     php artisan cache:clear && \
-    php artisan optimize:clear && \
     service nginx start && php-fpm
