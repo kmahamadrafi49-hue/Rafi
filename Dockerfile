@@ -1,10 +1,26 @@
 FROM php:8.2-apache
 
+# Install system dependencies and Composer
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    zip \
+    unzip
+
+# Get latest Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
 # Working directory
 WORKDIR /var/www/html
 
 # Copy project files
 COPY . .
+
+# Install PHP dependencies via Composer
+RUN composer install --no-dev --optimize-autoloader
 
 # Set Apache document root to public folder
 ENV APACHE_DOCUMENT_ROOT /var/www/html/public
