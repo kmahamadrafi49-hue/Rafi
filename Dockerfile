@@ -33,10 +33,6 @@ RUN mkdir -p storage/framework/sessions storage/framework/views storage/framewor
     chmod -R 777 storage bootstrap/cache && \
     chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Permanently change session driver to file in config/session.php
-RUN sed -i "s/'driver' => env('SESSION_DRIVER', 'database'),/'driver' => 'file',/g" config/session.php || true
-RUN sed -i "s/'driver' => 'database',/'driver' => 'file',/g" config/session.php || true
-
 # Overwrite Nginx default site configuration directly to point to public folder and port 10000
 RUN echo "server { \
     listen 10000; \
@@ -56,12 +52,11 @@ RUN echo "server { \
 
 EXPOSE 10000
 
-# Start Nginx and PHP-FPM with live DATABASE_URL mapping, cache clearing, and automatic sessions table creation
+# Start Nginx and PHP-FPM with live PostgreSQL connection mapping and file sessions
 CMD php -r "file_put_contents('.env', 'APP_ENV=production\nAPP_DEBUG=true\nAPP_KEY=base64:X7v6Q8m2K9s3L5p1R4w0N8x2Z6y1H3j5F7d9G2b4V1o=\nDB_CONNECTION=pgsql\nDATABASE_URL=' . getenv('DATABASE_URL') . '\nSESSION_DRIVER=file\nCACHE_DRIVER=file\n');" && \
     chmod -R 777 storage bootstrap/cache && \
     php artisan config:clear && \
     php artisan cache:clear && \
     php artisan route:clear && \
     php artisan view:clear && \
-    php -r "\$url = getenv('DATABASE_URL'); \$dbOpts = parse_url(\$url); \$pdo = new PDO('pgsql:host=' . \$dbOpts['host'] . ';port=' . (\$dbOpts['port'] ?? 5432) . ';dbname=' . ltrim(\$dbOpts['path'], '/'), \$dbOpts['user'], \$dbOpts['pass']); \$pdo->exec('CREATE TABLE IF NOT EXISTS sessions (id VARCHAR(255) PRIMARY KEY, user_id BIGINT, ip_address VARCHAR(45), user_agent TEXT, payload TEXT NOT NULL, last_activity INT NOT NULL)');" || true && \
     service nginx start && php-fpm
