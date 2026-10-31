@@ -25,18 +25,30 @@ WORKDIR /var/www/html
 # Copy application files
 COPY . /var/www/html
 
-# Install PHP dependencies with --no-scripts to prevent DB connection errors during build
+# Install PHP dependencies without scripts to avoid DB errors during build
 RUN composer install --no-dev --no-scripts --optimize-autoloader --ignore-platform-reqs
 
 # Set permissions for storage and bootstrap cache
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Configure Nginx root to point to Laravel's public directory and use Render's PORT (10000)
-RUN sed -i 's|root /var/www/html;|root /var/www/html/public;|g' /etc/nginx/sites-available/default
-RUN sed -i 's|listen 80 default_server;|listen 10000 default_server;|g' /etc/nginx/sites-available/default
-RUN sed -i 's|listen [::]:80 default_server;|listen [::]:10000 default_server;|g' /etc/nginx/sites-available/default
+# Overwrite Nginx default site configuration directly to point to public folder and port 10000
+RUN echo 'server {\
+    listen 10000;\
+    root /var/www/html/public;\
+    index index.php index.html index.htm;\
+    server_name _;\
+    location / {\
+        try_files $uri $uri/ /index.php?$query_string;\
+    }\
+    location ~ \.php$ {\
+        include fastcgi_params;\
+        fastcgi_pass 127.0.0.1:9000;\
+        fastcgi_index index.php;\
+        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;\
+    }\
+}' > /etc/nginx/sites-available/default
 
 EXPOSE 10000
 
-# Start Nginx and PHP-FPM together along with cache clearing
+# Start Nginx and PHP-FPM together
 CMD php artisan config:clear && php artisan cache:clear && service nginx start && php-fpm
